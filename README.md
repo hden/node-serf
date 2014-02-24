@@ -31,19 +31,11 @@ var client = Serf.connect({port: 7373}, function() {
 ## Note
 
 * Unlike node.js, serf agent emits empty string as success e.g. `{ Error: '', Seq: 1 }`
-* [msgpack-node](https://www.npmjs.org/package/msgpack) is currently half-broken, and can only decode part of the message
 
 ## What works?
 
 * join `client.join({Existing: ['127.0.0.1:7947'], Replay: false});`
-* leave `client.leave()`
-
-## What doesn't?
-
-* member
-* stream
-* monitor
-
-## Known issue
-
-* The [msgpack](https://npmjs.org/package/msgpack) module hangs on custom events with payload. This is being investigated. Any suggestion?
+* leave `client.leave();`
+* member `client.member(console.log.bind(console));`
+* stream `client.stream({'Type': 'member-join,member-leave'}, console.log.bind(console));`
+* monitor `client.monitor({"LogLevel": "DEBUG"}, console.log.bind(console));`

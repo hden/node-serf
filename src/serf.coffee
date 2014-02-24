@@ -1,10 +1,12 @@
 'use strict'
 
-net     = require 'net'
+net      = require 'net'
 
-debug   = require('debug')('serf')
-_       = require 'underscore'
-msgpack = require 'msgpack'
+debug    = require('debug')('serf')
+_        = require 'underscore'
+msgpack  = require 'msgpack-js-v5-ng'
+
+{Decode} = require "#{__dirname}/msgpack"
 
 capitalize = (str = '') ->
   if _.isString str
@@ -24,23 +26,24 @@ camelize = (str = '') ->
 class exports.Serf extends net.Socket
   constructor: ->
     super
-    @_seq = 0
-    # @decoder = new msgpack.Stream @
+    @_seq    = 0
+    @_next   = undefined
+    @decoder = new Decode()
 
-    # @decoder.on 'error', console.error.bind console
+    @pipe @decoder
 
     @once 'connect', (d) ->
       debug 'connected'
       @handshake {Version: 1}
 
-    # @decoder.on 'msg', (obj) =>
-    #   @emit obj.Seq, obj
-    #   @emit 'error', new Error(obj.Error) if (obj.Error? and obj.Error isnt '')
-    @on 'data', (packed) ->
-      msg = msgpack.unpack packed
-      @emit msg.Seq, msg
-      debug 'unpacked result %j', msg
-      @emit 'error', new Error(msg.Error) unless msg.Error is ''
+    @decoder.on 'data', (obj) =>
+      debug 'recieved %j', obj
+      @emit 'error', new Error(obj.Error) if (obj.Error? and obj.Error isnt '')
+
+      if obj.Seq
+        @_next = obj.Seq
+      else
+        @emit @_next, obj
 
     @once 'end', (d) ->
       debug 'disconnected'
@@ -72,11 +75,14 @@ class exports.Serf extends net.Socket
 
     debug 'sending header: %j', header
     debug 'sending body: %j', body
-    # @decoder.send header
-    # @decoder.send body if body?
-    @write msgpack.pack header
-    @write msgpack.pack body if body?
-    @once Seq, cb if cb?
+    @write msgpack.encode header
+    @write msgpack.encode body if body?
+
+    if Command in ['stream', 'monitor'] and cb?
+      @on Seq, cb
+    else if cb?
+      @once Seq, cb
+
     @
 
 exports.connect = ->

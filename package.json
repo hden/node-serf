@@ -29,6 +29,6 @@
   "dependencies": {
     "debug": "~0.7.4",
     "underscore": "~1.5.2",
-    "msgpack": ">=0.2.2"
+    "msgpack-js-v5-ng": "^0.3.0-v5"
   }
 }

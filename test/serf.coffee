@@ -22,5 +22,11 @@ describe 'basic test', ->
     client.join {Existing: ['127.0.0.1:7947'], Replay: false}, (result) ->
       done if result.Error is '' then undefined else result.Error
 
+  it 'should members', (done) ->
+    client.members (result) ->
+      assert.isArray result.Members
+      assert.deepPropertyVal result, 'Members.length', 2
+      do done
+
   it 'should leave', ->
     client.leave()
