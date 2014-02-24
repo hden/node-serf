@@ -23,11 +23,12 @@
   "gitHead": "8299820b8f0d7301495e2b61f657ce7d7d03a241",
   "devDependencies": {
     "chai": "~1.8.1",
-    "mocha": "~1.15.1"
+    "mocha": "~1.15.1",
+    "coffee-script": "~1.7.1"
   },
   "dependencies": {
     "debug": "~0.7.4",
     "underscore": "~1.5.2",
-    "msgpack": "~0.2.2"
+    "msgpack": ">=0.2.2"
   }
 }

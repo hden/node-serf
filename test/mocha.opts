@@ -1,5 +1,4 @@
---compilers coffee:coffee-script
+--compilers coffee:coffee-script/register
 --reporter spec
 --ui bdd
---timeout 500
---globals match
+--timeout 1000
