@@ -7,6 +7,12 @@ node-serf
 
 To provide a interface for communication with Serf daemon via the [RPC Protocol](http://www.serfdom.io/docs/agent/rpc.html).
 
+## Installation
+
+```
+npm install --save node-serf
+```
+
 ## Usage
 
 Just send the body. The header and `Seq` values has been taken cared for you.
