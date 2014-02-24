@@ -37,6 +37,7 @@ var client = Serf.connect({port: 7373}, function() {
 ## Note
 
 * Unlike node.js, serf agent emits empty string as success e.g. `{ Error: '', Seq: 1 }`
+* Serf RPC Protocol: https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown
 
 ## What works?
 
