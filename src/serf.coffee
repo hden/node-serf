@@ -1,9 +1,6 @@
 'use strict'
 
-{EventEmitter} = require 'events'
-{exec}         = require 'child_process'
-stream         = require 'stream'
-net            = require 'net'
+net     = require 'net'
 
 debug   = require('debug')('serf')
 _       = require 'underscore'
@@ -24,35 +21,29 @@ camelize = (str = '') ->
   str.trim().replace /[-_\s]+(.)?/g, (match, c) ->
     if c? then c.toUpperCase() else ''
 
-print = (d) ->
-  return unless d?
-  if _.isString d
-    debug d
-  else
-    try
-      debug JSON.stringify d, null, 4
-    catch error
-      debug 'circular structure!'
-
 class exports.Serf extends net.Socket
   constructor: ->
     super
     @_seq = 0
-    @_cache = ''
-    @decoder = new msgpack.Stream @
+    # @decoder = new msgpack.Stream @
+
+    # @decoder.on 'error', console.error.bind console
 
     @once 'connect', (d) ->
-      print 'connected'
+      debug 'connected'
       @handshake {Version: 1}
 
-    @decoder.on 'msg', (obj) =>
-      @emit obj.Seq, obj
-      {Error} = obj
-      @emit 'error', Error if (Error? and Error isnt '')
-      print obj
+    # @decoder.on 'msg', (obj) =>
+    #   @emit obj.Seq, obj
+    #   @emit 'error', new Error(obj.Error) if (obj.Error? and obj.Error isnt '')
+    @on 'data', (packed) ->
+      msg = msgpack.unpack packed
+      @emit msg.Seq, msg
+      debug 'unpacked result %j', msg
+      @emit 'error', new Error(msg.Error) unless msg.Error is ''
 
     @once 'end', (d) ->
-      print 'disconnected'
+      debug 'disconnected'
 
     commands = [
       'handshake'
@@ -77,20 +68,20 @@ class exports.Serf extends net.Socket
 
     if _.isFunction body
       cb = body
-      body = undefined
+      body = {}
 
-    print 'header'
-    print header
-    print 'body'
-    print body
+    debug 'sending header: %j', header
+    debug 'sending body: %j', body
+    # @decoder.send header
+    # @decoder.send body if body?
     @write msgpack.pack header
-    @write msgpack.pack body or {}
+    @write msgpack.pack body if body?
     @once Seq, cb if cb?
     @
 
 exports.connect = ->
   args = net._normalizeConnectArgs arguments
-  print 'createConnection', args
+  debug 'create connection with args: %j', args
   s = new exports.Serf args[0]
   exports.Serf::connect.apply s, args
   s

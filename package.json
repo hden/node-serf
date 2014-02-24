@@ -28,6 +28,6 @@
   "dependencies": {
     "debug": "~0.7.4",
     "underscore": "~1.5.2",
-    "msgpack": "~0.2.1"
+    "msgpack": "~0.2.2"
   }
 }
