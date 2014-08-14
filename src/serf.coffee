@@ -59,6 +59,7 @@ class exports.Serf extends net.Socket
       'stop'
       'leave'
       'tags'
+      'stats'
     ]
 
     commands.forEach (command) =>

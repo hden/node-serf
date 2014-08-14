@@ -81,7 +81,7 @@
       this.once('end', function(d) {
         return debug('disconnected');
       });
-      commands = ['handshake', 'event', 'force-leave', 'join', 'members', 'stream', 'monitor', 'stop', 'leave', 'tags'];
+      commands = ['handshake', 'event', 'force-leave', 'join', 'members', 'stream', 'monitor', 'stop', 'leave', 'tags', 'stats'];
       commands.forEach((function(_this) {
         return function(command) {
           return _this[command] = function(body, cb) {
