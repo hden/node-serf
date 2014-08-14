@@ -43,6 +43,6 @@ var client = Serf.connect({port: 7373}, function() {
 
 * join `client.join({Existing: ['127.0.0.1:7947'], Replay: false});`
 * leave `client.leave();`
-* member `client.member(console.log.bind(console));`
+* members `client.members(console.log.bind(console));`
 * stream `client.stream({'Type': 'member-join,member-leave'}, console.log.bind(console));`
 * monitor `client.monitor({"LogLevel": "DEBUG"}, console.log.bind(console));`
