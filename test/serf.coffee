@@ -18,6 +18,11 @@ describe 'basic test', ->
   before (done) ->
     client = Serf.connect {port: 7373}, done
 
+  it 'should stats', (done) ->
+    client.stats {}, (result) ->
+      assert.equal 'agent-one', result.agent.name
+      done if result.Error is '' then undefined else result.Error
+
   it 'should join', (done) ->
     client.join {Existing: ['127.0.0.1:7947'], Replay: false}, (result) ->
       done if result.Error is '' then undefined else result.Error
