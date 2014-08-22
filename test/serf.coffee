@@ -20,6 +20,9 @@ describe 'basic test', ->
     procs.forEach (proc) ->
       do proc.kill
 
+  it 'should define camel-casing methods', ->
+    assert.equal client['force-leave'], client.forceLeave
+
   it 'should stats', (done) ->
     client.stats {}, (result) ->
       assert.equal 'agent-one', result.agent.name

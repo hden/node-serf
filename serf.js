@@ -84,7 +84,7 @@
       commands = ['handshake', 'event', 'force-leave', 'join', 'members', 'stream', 'monitor', 'stop', 'leave', 'tags', 'stats'];
       commands.forEach((function(_this) {
         return function(command) {
-          return _this[command] = function(body, cb) {
+          return _this[command] = _this[camelize(command)] = function(body, cb) {
             return _this.send(command, body, cb);
           };
         };
