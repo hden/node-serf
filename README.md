@@ -1,6 +1,8 @@
 node-serf
 =========
 
+[![Build Status](https://travis-ci.org/hden/node-serf.svg?branch=master)](https://travis-ci.org/hden/node-serf)
+
 [Serf](http://www.serfdom.io) management and orchestration
 
 ## Aim
