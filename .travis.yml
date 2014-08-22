@@ -1,0 +1,7 @@
+language: node_js
+node_js:
+  - "0.10"
+  - "0.11"
+before_install:
+  - "wget -qO- -O serf.zip https://dl.bintray.com/mitchellh/serf/0.6.3_linux_amd64.zip && unzip serf.zip && rm serf.zip"
+  - "sudo mv serf /usr/local/bin/serf"
