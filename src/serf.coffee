@@ -63,8 +63,10 @@ class exports.Serf extends net.Socket
     ]
 
     commands.forEach (command) =>
-      @[command] = (body, cb) =>
-        @send command, body, cb
+      @[command] =
+      @[camelize command] =
+        (body, cb) =>
+          @send command, body, cb
 
   send: (Command = '', body, cb) =>
     Seq = @_seq++

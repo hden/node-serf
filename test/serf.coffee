@@ -18,6 +18,9 @@ describe 'basic test', ->
   before (done) ->
     client = Serf.connect {port: 7373}, done
 
+  it 'should define camel-casing methods', ->
+    assert.equal client['force-leave'], client.forceLeave
+
   it 'should stats', (done) ->
     client.stats {}, (result) ->
       assert.equal 'agent-one', result.agent.name
