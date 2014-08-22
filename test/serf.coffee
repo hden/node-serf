@@ -1,22 +1,24 @@
 'use strict'
 
 {assert} = require 'chai'
+{spawn} = require 'child_process'
 Serf = require '../'
 
-###
-Please start two serf agents by
-
-```
-$ serf agent -node=agent-one -bind=127.0.0.1:7946
-$ serf agent -node=agent-two -bind=127.0.0.1:7947 -rpc-addr=127.0.0.1:7374
-```
-###
-
 describe 'basic test', ->
+  procs = []
   client = undefined
 
   before (done) ->
-    client = Serf.connect {port: 7373}, done
+    procs.push(spawn 'serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946'])
+    procs.push(spawn 'serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7374'])
+
+    setTimeout ->
+      client = Serf.connect {port: 7373}, done
+    , 500
+
+  after () ->
+    procs.forEach (proc) ->
+      do proc.kill
 
   it 'should stats', (done) ->
     client.stats {}, (result) ->
