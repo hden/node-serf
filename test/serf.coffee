@@ -6,14 +6,15 @@ Serf = require '../'
 
 describe 'basic test', ->
   procs = []
-  client = undefined
+  clients = {}
 
   before (done) ->
     procs.push(spawn 'serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946'])
     procs.push(spawn 'serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7374'])
 
     setTimeout ->
-      client = Serf.connect {port: 7373}, done
+      clients.one = Serf.connect {port: 7373}, ->
+        clients.two = Serf.connect {port: 7374}, done
     , 500
 
   after () ->
@@ -21,22 +22,31 @@ describe 'basic test', ->
       do proc.kill
 
   it 'should define camel-casing methods', ->
-    assert.equal client['force-leave'], client.forceLeave
+    assert.equal clients.one['force-leave'], clients.one.forceLeave
 
   it 'should stats', (done) ->
-    client.stats {}, (result) ->
+    clients.one.stats {}, (result) ->
       assert.equal 'agent-one', result.agent.name
       done if result.Error is '' then undefined else result.Error
 
   it 'should join', (done) ->
-    client.join {Existing: ['127.0.0.1:7947'], Replay: false}, (result) ->
+    clients.one.join {Existing: ['127.0.0.1:7947'], Replay: false}, (result) ->
       done if result.Error is '' then undefined else result.Error
 
   it 'should members', (done) ->
-    client.members (result) ->
+    clients.one.members (result) ->
       assert.isArray result.Members
       assert.deepPropertyVal result, 'Members.length', 2
       do done
 
+  it 'should event', (done) ->
+    clients.two.stream {Type: 'user:foo'}, (data) ->
+      assert.equal 'user', data.Event
+      assert.equal 'foo', data.Name
+      assert.equal 'test payload', data.Payload.toString()
+      do done
+    clients.one.event {Name: 'foo', Payload: 'test payload', Coalesce: true}
+
+
   it 'should leave', ->
-    client.leave()
+    do clients.one.leave
