@@ -47,6 +47,9 @@ describe 'basic test', ->
       do done
     clients.one.event {Name: 'foo', Payload: 'test payload', Coalesce: true}
 
-
-  it 'should leave', ->
+  it 'should leave', (done) ->
+    clients.two.stream {Type: 'member-leave'}, (data) ->
+      member = data.Members[0]
+      assert.equal 'agent-one', member.Name
+      do done
     do clients.one.leave
