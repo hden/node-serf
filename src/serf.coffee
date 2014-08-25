@@ -6,6 +6,7 @@ debug    = require('debug')('serf')
 _        = require 'underscore'
 msgpack  = require 'msgpack-js-v5-ng'
 
+{Stream} = require "#{__dirname}/stream"
 {Decode} = require "#{__dirname}/msgpack"
 
 capitalize = (str = '') ->
@@ -82,8 +83,21 @@ class exports.Serf extends net.Socket
     @write msgpack.encode header
     @write msgpack.encode body if body?
 
-    if Command in ['stream', 'monitor'] and cb?
-      @on Seq, cb
+    if Command in ['stream', 'monitor']
+      @on Seq, cb if cb?
+
+      stream = new Stream(@, Seq)
+
+      ondata = (result) ->
+        stream.emit 'data', result
+
+      @on Seq, ondata
+
+      stream.once 'stop', =>
+        @removeListener Seq, cb if cb?
+        stream.removeListener 'data', ondata
+
+      return stream
     else if cb?
       @once Seq, cb
 

@@ -29,6 +29,13 @@ describe 'basic test', ->
       assert.equal 'agent-one', result.agent.name
       done if result.Error is '' then undefined else result.Error
 
+  it 'should monitor', (done) ->
+    stream = clients.one.monitor {LogLevel: 'DEBUG'}
+    stream.once 'data', (result) ->
+      assert.typeOf result.Log, 'String'
+      do stream.stop
+      do done
+
   it 'should join', (done) ->
     clients.one.join {Existing: ['127.0.0.1:7947'], Replay: false}, (result) ->
       done if result.Error is '' then undefined else result.Error
@@ -46,7 +53,6 @@ describe 'basic test', ->
       assert.equal 'test payload', data.Payload.toString()
       do done
     clients.one.event {Name: 'foo', Payload: 'test payload', Coalesce: true}
-
 
   it 'should leave', ->
     do clients.one.leave
