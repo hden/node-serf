@@ -1,15 +1,15 @@
 'use strict'
 
-msgpack  = require 'msgpack-js-v5-ng'
+var msgpack  = require('msgpack-js-v5-ng')
 
-{Decode} = require '../msgpack'
-{assert} = require 'chai'
+var Decode = require('../msgpack').Decode
+var assert = require('chai').assert
 
-describe 'streaming msgpack', ->
-  dec = new Decode()
+describe('streaming msgpack', function () {
+  var dec = new Decode()
 
-  it 'should decode', (done) ->
-    a = {
+  it('should decode', function (done) {
+    var a = {
       "Members": [
         {
           "Name": "TestNode",
@@ -34,8 +34,11 @@ describe 'streaming msgpack', ->
       ]
     }
 
-    dec.on 'data', (b) ->
-      assert.deepEqual a, b
-      do done
-    dec.on 'error', done
-    dec.write msgpack.encode a
+    dec.on('data', function (b) {
+      assert.deepEqual(a, b)
+      done()
+    })
+    dec.on('error', done)
+    dec.write(msgpack.encode(a))
+  })
+})
