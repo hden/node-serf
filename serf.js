@@ -14,6 +14,12 @@ function camelize (str) {
   })
 }
 
+function expectBody (seq) {
+  return seq % 2 === 0
+}
+
+var ids = 0
+
 function Serf (arg1) {
   if (!(this instanceof Serf)) {
     throw new Error('Class constructor cannot be invoked without "new"')
@@ -22,64 +28,89 @@ function Serf (arg1) {
   net.Socket.call(this, arg1)
 
   var _this = this
-  this._seq = 0
+  this._id = ids++;
+  // Even-numbered sequences have no response body; odds do.
+  this._seqBody = 0
+  this._seqNoBody = 1
   this._next = null
   var decoder = new Decode()
   this.pipe(decoder)
 
   this.once('connect', function () {
-    debug('connected')
+    debug('[%j] connected', _this._id)
     return this.handshake({
       Version: 1
-    })
+    }/*, TODO connect callback should be called at this point */)
   })
 
   decoder.on('data', function (obj) {
-    debug('received %j', obj)
+    debug('[%j] received %j', _this._id, obj)
 
     if ((obj.Error !== null && obj.Error !== undefined) && obj.Error !== '') {
       var err = new Error(obj.Error)
       _this.emit('error', err)
     }
 
-    if (obj.Seq) {
-      return (_this._next = obj.Seq)
+    var Seq = obj.Seq
+    if (Seq !== undefined) {
+      // Header
+      if (expectBody(Seq)) {
+        _this._next = obj.Seq
+      } else {
+        _this.emit(Seq)
+      }
     } else {
-      return _this.emit(_this._next, obj)
+      _this.emit(_this._next, obj)
     }
   })
 
-  this.once('end', function (d) {
-    return debug('disconnected')
+  this.once('end', function () {
+    return debug('[%j] disconnected', _this._id)
   })
 
   var commands = [
-    'handshake',
-    'event',
-    'force-leave',
-    'join',
-    'members',
-    'stream',
-    'monitor',
-    'stop',
-    'leave',
-    'tags',
-    'stats'
+    {name: 'handshake', hasResponse: false},
+    {name: 'auth', hasResponse: false},
+    {name: 'event', hasResponse: false},
+    {name: 'force-leave', hasResponse: false},
+    {name: 'join', hasResponse: true},
+    {name: 'members', hasResponse: true},
+    {name: 'members-filtered', hasResponse: true},
+    {name: 'tags', hasResponse: false},
+    {name: 'stream', hasResponse: true},
+    {name: 'monitor', hasResponse: true},
+    {name: 'stop', hasResponse: false},
+    {name: 'leave', hasResponse: false},
+    {name: 'query', hasResponse: true},
+    {name: 'respond', hasResponse: false},
+    {name: 'install-key', hasResponse: true},
+    {name: 'use-key', hasResponse: true},
+    {name: 'remove-key', hasResponse: true},
+    {name: 'list-keys', hasResponse: true},
+    {name: 'stats', hasResponse: true},
+    {name: 'get-coordinate', hasResponse: true}
   ]
 
   commands.forEach(function (command) {
-    _this[command] = _this[camelize(command)] = function (body, cb) {
-      return _this.send(command, body, cb)
+    var commandName = command.name
+    var hasResponse = command.hasResponse
+    _this[commandName] = _this[camelize(commandName)] = function (body, cb) {
+      return _this.send(commandName, hasResponse, body, cb)
     }
   })
 }
 
 util.inherits(Serf, net.Socket)
 
-Serf.prototype.send = function (Command, body, cb) {
+Serf.prototype.send = function (Command, hasResponse, body, cb) {
   if (Command === null) Command = ''
 
-  var Seq = this._seq++
+  var Seq
+  if (hasResponse) {
+    Seq = this._seqBody += 2
+  } else {
+    Seq = this._seqNoBody += 2
+  }
 
   var header = {
     Command: Command,
@@ -91,17 +122,12 @@ Serf.prototype.send = function (Command, body, cb) {
     body = {}
   }
 
-  debug('sending header: %j', header)
-  this.write(msgpack.encode(header))
-  if (body !== null) {
-    debug('sending body: %j', body)
-    this.write(msgpack.encode(body))
-  }
-
-  if (Command === 'stream' || Command === 'monitor') {
+  // Setup listeners
+  var stream
+  if (Command === 'stream' || Command === 'monitor' || Command === 'query') {
     if (typeof cb === 'function') this.on(Seq, cb)
 
-    var stream = new Stream(this, Seq)
+    stream = new Stream(this, Seq)
 
     var ondata = function ondata (result) {
       return stream.emit('data', result)
@@ -115,12 +141,19 @@ Serf.prototype.send = function (Command, body, cb) {
       }
       return stream.removeListener('data', ondata)
     })
-
-    return stream
-
   } else if (typeof cb === 'function') {
     this.once(Seq, cb)
   }
+
+  // Send message
+  debug('[%j] sending header: %j', this._id, header)
+  this.write(msgpack.encode(header))
+  if (body !== null) {
+    debug('[%j] sending body: %j', this._id, body)
+    this.write(msgpack.encode(body))
+  }
+
+  if (stream) return stream;
 }
 
 exports.connect = function connect () {
