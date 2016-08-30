@@ -29,10 +29,10 @@ describe('Serf', function () {
     assert.equal(clients.one['force-leave'], clients.one.forceLeave)
   })
 
-
   describe('stats', function () {
     it('works', function (done) {
-      clients.one.stats({}, function (result) {
+      clients.one.stats({}, function (err, result) {
+        assert.ifError(err)
         assert.equal('agent-one', result.agent.name)
         done(result.Error === '' ? null : result.Error)
       })
@@ -47,12 +47,16 @@ describe('Serf', function () {
         stream.stop()
         done()
       })
+      stream.on('error', function (err) {
+        assert.ifError(err)
+      })
     })
   })
 
   describe('join', function () {
     it('works', function (done) {
-      clients.one.join({Existing: ['127.0.0.1:7947'], Replay: false}, function (result) {
+      clients.one.join({Existing: ['127.0.0.1:7947'], Replay: false}, function (err, result) {
+        assert.ifError(err)
         assert.equal(result.Num, 1)
         done(result.Error === '' ? null : result.Error)
       })
@@ -61,7 +65,8 @@ describe('Serf', function () {
 
   describe('members', function () {
     it('works', function (done) {
-      clients.one.members(function (result) {
+      clients.one.members(function (err, result) {
+        assert.ifError(err)
         assert.isArray(result.Members)
         assert.deepPropertyVal(result, 'Members.length', 2)
         done()
@@ -71,7 +76,8 @@ describe('Serf', function () {
 
   describe('stream+event', function () {
     it('works', function (done) {
-      clients.two.stream({Type: 'user:foo'}, function (data) {
+      clients.two.stream({Type: 'user:foo'}, function (err, data) {
+        assert.ifError(err)
         assert.equal('user', data.Event)
         assert.equal('foo', data.Name)
         assert.equal('test payload', data.Payload.toString())
@@ -87,7 +93,8 @@ describe('Serf', function () {
 
   describe('tags', function () {
     it('works', function (done) {
-      clients.one.tags({Tags: {key1: 'val1'}}, function () {
+      clients.one.tags({Tags: {key1: 'val1'}}, function (err) {
+        assert.ifError(err)
         done()
       })
     })
@@ -95,7 +102,8 @@ describe('Serf', function () {
 
   describe('members-filtered', function () {
     it('works', function (done) {
-      clients.one.membersFiltered({Tags: {key1: 'val1'}}, function (res) {
+      clients.one.membersFiltered({Tags: {key1: 'val1'}}, function (err, res) {
+        assert.ifError(err)
         assert.equal(res.Members.length, 1)
         assert.equal(res.Members[0].Name, 'agent-one')
         done()
@@ -104,9 +112,9 @@ describe('Serf', function () {
   })
 
   describe('query+stream+respond', function () {
-    // This test is flakey...
-    xit('works', function (done) {
-      clients.two.stream({Type: 'query'}, function (data) {
+    it('works', function (done) {
+      clients.two.stream({Type: 'query'}, function (err, data) {
+        assert.ifError(err)
         assert.equal(data.Event, 'query')
         assert.equal(data.Name, 'name')
         assert.equal(data.Payload.toString(), 'payload')
@@ -115,7 +123,8 @@ describe('Serf', function () {
         clients.two.respond({ID: ID, Payload: 'client two response'})
       })
       var opts = {Name: "name", Payload: "payload", Timeout: 1000000}
-      clients.one.query(opts, function (data) {
+      clients.one.query(opts, function (err, data) {
+        assert.ifError(err)
         if (data.Type === 'response') {
           assert.equal(data.Payload.toString(), 'client two response')
         } else if (data.Type === 'done') {
@@ -135,7 +144,8 @@ describe('Serf', function () {
 
   describe('get-coordinate', function () {
     it('works', function (done) {
-      clients.one.getCoordinate({Node: 'agent-one'}, function (res) {
+      clients.one.getCoordinate({Node: 'agent-one'}, function (err, res) {
+        assert.ifError(err)
         assert(res.Ok)
         assert.property(res, "Coord")
         done()
@@ -145,11 +155,16 @@ describe('Serf', function () {
 
   describe('leave', function () {
     it('works', function (done) {
-      clients.two.stream({Type: 'member-leave'}, function (data) {
+      clients.two.stream({Type: 'member-leave'}, function (err, data) {
+        assert.ifError(err)
         assert.equal(data.Members[0].Name, 'agent-one')
         done()
       })
-      clients.one.leave()
+      setTimeout(function () {
+        clients.one.leave(function (err) {
+          assert.ifError(err)
+        })
+      }, 250)
     })
   })
 })
