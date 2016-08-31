@@ -36,13 +36,6 @@ function Serf (arg1) {
   var decoder = new Decode()
   this.pipe(decoder)
 
-  this.once('connect', function () {
-    debug('[%j] connected', _this._id)
-    return this.handshake({
-      Version: 1
-    }/*, TODO connect callback should be called at this point */)
-  })
-
   decoder.on('data', function (obj) {
     debug('[%j] received %j', _this._id, obj)
 
@@ -174,9 +167,33 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
 }
 
 exports.connect = function connect () {
-  var args = net._normalizeConnectArgs(arguments)
+  var argsLen = arguments.length
+  var args = new Array(argsLen)
+  for (var i = 0; i < argsLen; i++) {
+    args[i] = arguments[i]
+  }
+
+  args = net._normalizeConnectArgs(args)
   debug('create connection with args: %j', args)
+
   var s = new Serf(args[0])
+
+  var onHandshake = typeof args[args.length - 1] === 'function'
+    ? args.pop()
+    : function () {}
+
+  // Pass errors from the connection phase to the callback.
+  s.on('error', onHandshake)
+
+  var doHandshake = function () {
+    debug('[%j] connected', s._id)
+    s.removeListener('error', onHandshake)
+    s.handshake({
+      Version: 1
+    }, onHandshake)
+  }
+  args.push(doHandshake)
+
   Serf.prototype.connect.apply(s, args)
   return s
 }

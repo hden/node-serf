@@ -48,7 +48,7 @@ for authoritative information on each command.
 
 #### Serf.connect(options[, callback])
 * `options` \<Object\> Connection options.
-* `callback` \<Function\> Invoked after connection.
+* `callback` \<Function\> Invoked after connected and handshake completed.
 Returns a new Serf client.
 
 The `options` argument typically contains `port` (required) and `host`

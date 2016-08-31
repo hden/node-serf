@@ -13,7 +13,8 @@ describe('Serf', function () {
     procs.push(spawn('serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7374']))
 
     setTimeout(function () {
-      clients.one = Serf.connect({port: 7373}, function () {
+      clients.one = Serf.connect({port: 7373}, function (err) {
+        assert.ifError(err)
         clients.two = Serf.connect({port: 7374}, done)
       })
     }, 500)
