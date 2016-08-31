@@ -2,6 +2,7 @@
 
 var assert = require('chai').assert
 var spawn = require('child_process').spawn
+var net = require('net')
 var Serf = require('../serf')
 
 describe('Serf', function () {
@@ -9,13 +10,13 @@ describe('Serf', function () {
   var clients = {}
 
   before(function (done) {
-    procs.push(spawn('serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946']))
-    procs.push(spawn('serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7374']))
+    procs.push(spawn('serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946', '-rpc-addr=127.0.0.1:7374']))
+    procs.push(spawn('serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7375']))
 
     setTimeout(function () {
-      clients.one = Serf.connect({port: 7373}, function (err) {
+      clients.one = Serf.connect({port: 7374}, function (err) {
         assert.ifError(err)
-        clients.two = Serf.connect({port: 7374}, done)
+        clients.two = Serf.connect({port: 7375}, done)
       })
     }, 500)
   })
@@ -28,6 +29,20 @@ describe('Serf', function () {
 
   it('should define camel-casing methods', function () {
     assert.equal(clients.one['force-leave'], clients.one.forceLeave)
+  })
+
+  describe('connect', function () {
+    it('defaults to localhost:7373', function (done) {
+      var mockServer = net.createServer(function (c) {
+        c.end()
+        mockServer.close(done)
+      })
+      mockServer.listen(7373, function () { })
+
+      var agent = Serf.connect(function () {
+        agent.end()
+      })
+    })
   })
 
   describe('stats', function () {
