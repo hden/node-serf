@@ -10,6 +10,7 @@ cache:
   - node_modules
 before_install:
   - "wget -qO- -O serf.zip https://releases.hashicorp.com/serf/0.7.0/serf_0.7.0_linux_amd64.zip && unzip serf.zip && rm serf.zip"
-  - "mv serf /usr/local/bin/serf"
+  - "mkdir -p /tmp/serf && mv serf /tmp/serf/serf"
+  - "export PATH=$PATH:/tmp/serf/"
 before_script:
   - "npm run lint"
