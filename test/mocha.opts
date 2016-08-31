@@ -1,3 +1,2 @@
---reporter spec
---ui bdd
+--require intelli-espower-loader
 --timeout 10000
