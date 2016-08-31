@@ -2,9 +2,8 @@
 
 var net = require('net')
 var debug = require('debug')('serf')
-var msgpack = require('msgpack-js-v5-ng')
+var msgpack = require('msgpack-lite')
 var Stream = require('./stream').Stream
-var Decode = require('./msgpack').Decode
 var util = require('util')
 
 function camelize (str) {
@@ -33,7 +32,7 @@ function Serf (arg1) {
   this._seqBody = 0
   this._seqNoBody = 1
   this._next = null
-  var decoder = new Decode()
+  var decoder = msgpack.createDecodeStream()
   this.pipe(decoder)
 
   decoder.on('data', function (obj) {

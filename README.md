@@ -156,5 +156,4 @@ client.on('error', function (err) {
 
 ## Notes
 
-* Unlike node.js, serf agent emits empty string as success e.g. `{ Error: '', Seq: 1 }`
 * Serf RPC Protocol docs: https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown
