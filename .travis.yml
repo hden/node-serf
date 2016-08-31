@@ -1,9 +1,13 @@
+sudo: false
 language: node_js
 node_js:
   - "0.10"
   - "0.12"
   - "4"
   - "6"
+cache:
+  directories:
+  - node_modules
 before_install:
   - "wget -qO- -O serf.zip https://releases.hashicorp.com/serf/0.7.0/serf_0.7.0_linux_amd64.zip && unzip serf.zip && rm serf.zip"
   - "sudo mv serf /usr/local/bin/serf"
