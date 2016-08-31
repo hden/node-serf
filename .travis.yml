@@ -7,3 +7,5 @@ node_js:
 before_install:
   - "wget -qO- -O serf.zip https://releases.hashicorp.com/serf/0.7.0/serf_0.7.0_linux_amd64.zip && unzip serf.zip && rm serf.zip"
   - "sudo mv serf /usr/local/bin/serf"
+before_script:
+  - "npm run lint"

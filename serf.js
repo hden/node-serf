@@ -27,7 +27,7 @@ function Serf (arg1) {
   net.Socket.call(this, arg1)
 
   var _this = this
-  this._id = ids++;
+  this._id = ids++
   // Even-numbered sequences have no response body; odds do.
   this._seqBody = 0
   this._seqNoBody = 1
@@ -41,7 +41,6 @@ function Serf (arg1) {
     var Seq = obj.Seq
     if (Seq !== undefined) {
       // Header
-
       if ((obj.Error !== null && obj.Error !== undefined) && obj.Error !== '') {
         var err = new Error(obj.Error)
         return _this.emit(Seq, err)
@@ -52,7 +51,6 @@ function Serf (arg1) {
       } else {
         _this.emit(Seq, null)
       }
-
     } else {
       // Body
       _this.emit(_this._next, null, obj)
@@ -143,7 +141,7 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
     }
     this.on(Seq, ondata)
 
-    var _this = this;
+    var _this = this
     stream.once('stop', function () {
       if (typeof cb === 'function') {
         _this.removeListener(Seq, cb)
@@ -162,7 +160,7 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
     this.write(msgpack.encode(body))
   }
 
-  if (stream) return stream;
+  if (stream) return stream
 }
 
 exports.connect = function connect () {

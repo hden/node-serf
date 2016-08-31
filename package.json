@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "mocha",
+    "lint": "standard"
   },
   "repository": {
     "type": "git",
@@ -22,8 +23,10 @@
   "readmeFilename": "README.md",
   "gitHead": "8299820b8f0d7301495e2b61f657ce7d7d03a241",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^3.0.2"
+    "intelli-espower-loader": "^1.0.1",
+    "mocha": "^3.0.2",
+    "power-assert": "^1.4.1",
+    "standard": "^8.0.0"
   },
   "dependencies": {
     "debug": "^2.2.0",
