@@ -173,6 +173,13 @@ exports.connect = function connect () {
     args[i] = arguments[i]
   }
 
+  if (typeof args[0] === 'function') {
+    // Default
+    args.unshift({
+      port: 7373
+    })
+  }
+
   args = net._normalizeConnectArgs(args)
   debug('create connection with args: %j', args)
 

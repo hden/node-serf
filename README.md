@@ -25,8 +25,8 @@ the response.
 ```js
 var Serf = require('node-serf');
 
-// The address that Serf will bind to for the agent's RPC server. By default this is "127.0.0.1:7373"
-var client = Serf.connect({port: 7373}, function (err) {
+// Connection to Serf agent at the default, "127.0.0.1:7373"
+var client = Serf.connect(function (err) {
   assert.ifError(err);
   console.log('connected');
 
@@ -46,9 +46,11 @@ var client = Serf.connect({port: 7373}, function (err) {
 Please refer to the [Serf RPC documentation](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown)
 for authoritative information on each command.
 
-#### Serf.connect(options[, callback])
-* `options` \<Object\> Connection options.
+#### Serf.connect([options][, callback])
+* `options` \<Object\> Connection options. If omitted, defaults to
+localhost:7373.
 * `callback` \<Function\> Invoked after connected and handshake completed.
+
 Returns a new Serf client.
 
 The `options` argument typically contains `port` (required) and `host`
