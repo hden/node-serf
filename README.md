@@ -26,17 +26,21 @@ the response.
 var Serf = require('node-serf');
 
 // The address that Serf will bind to for the agent's RPC server. By default this is "127.0.0.1:7373"
-var client = Serf.connect({port: 7373}, function () {
+var client = Serf.connect({port: 7373}, function (err) {
+  assert.ifError(err);
   console.log('connected');
-  client.join({Existing: ['127.0.0.1:7946'], Replay: false});
 
-  fn = function() {
-    client.leave();
-  }
+  client.join({Existing: ['127.0.0.1:7946'], Replay: false}, function (err, response) {
+    assert.ifError(err);
 
-  setTimeout(fn, 1000);
+    setTimeout(function() {
+      client.leave();
+    }, 1000);
+
+  });
 });
 ```
+
 ## API Documentation
 
 Please refer to the [Serf RPC documentation](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown)
@@ -57,7 +61,7 @@ directly.
 
 #### serf.auth(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#auth)
 
-#### serf.disconnect()
+#### serf.end()
 Disconnects from the Serf agent. You must call this to close the socket so that
 node.js may gracefully exit. Alternatively, call `serf.leave()` to close both
 the socket and the Serf agent; once called, you must restart the agent to
@@ -79,7 +83,7 @@ rejoin, however.
 
 #### serf.stream(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#stream)
 
-Listen via an `on('data')` listener:
+Listen via `on('data')` and `on('error')` listeners:
 
 ```js
 var handler = client.stream({Type: '*'}); // returns instance of stream handler
@@ -89,12 +93,15 @@ handler.on('data', function (result) {
   console.log(result);
   handler.stop(); // stop streaming
 });
+
+handler.on('error', console.error.bind(console)); // log errors
 ```
 
 or, via a callback that will be invoked on every event instance:
 
 ```js
-var handler = client.stream({Type: '*'}, function (result) {
+var handler = client.stream({Type: '*'}, function (err, result) {
+  assert.ifError(err);
   console.log(result);
   handler.stop();
 });
@@ -124,6 +131,26 @@ Use with `serf.stream`. Your response `ID` property must match the query ID.
 #### serf.stats(callback) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#stats)
 
 #### serf.getCoordinate(callback) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#get-coordinate)
+
+#### Event: 'error'
+
+The Serf client extends node.js's socket class. In addition to handling errors
+passed to the command callbacks and errors raised on streams created by the
+`monitor`, `stream` and `query` commands, you should subscribe to the client's
+`'error'` event, which will be invoked in case of a socket error unrelated to a
+Serf command (such as a network fault). If you do not, these errors will bubble
+up and become uncaught exceptions.
+
+```js
+var client = Serf.connect({port: 7373}, function (err) {
+  assert.ifError(err);
+  /// do stuff
+});
+
+client.on('error', function (err) {
+  // handle error
+})
+```
 
 ## Notes
 

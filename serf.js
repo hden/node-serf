@@ -46,21 +46,24 @@ function Serf (arg1) {
   decoder.on('data', function (obj) {
     debug('[%j] received %j', _this._id, obj)
 
-    if ((obj.Error !== null && obj.Error !== undefined) && obj.Error !== '') {
-      var err = new Error(obj.Error)
-      _this.emit('error', err)
-    }
-
     var Seq = obj.Seq
     if (Seq !== undefined) {
       // Header
+
+      if ((obj.Error !== null && obj.Error !== undefined) && obj.Error !== '') {
+        var err = new Error(obj.Error)
+        return _this.emit(Seq, err)
+      }
+
       if (expectBody(Seq)) {
         _this._next = obj.Seq
       } else {
-        _this.emit(Seq)
+        _this.emit(Seq, null)
       }
+
     } else {
-      _this.emit(_this._next, obj)
+      // Body
+      _this.emit(_this._next, null, obj)
     }
   })
 
@@ -80,7 +83,6 @@ function Serf (arg1) {
     {name: 'stream', hasResponse: true},
     {name: 'monitor', hasResponse: true},
     {name: 'stop', hasResponse: false},
-    {name: 'leave', hasResponse: false},
     {name: 'query', hasResponse: true},
     {name: 'respond', hasResponse: false},
     {name: 'install-key', hasResponse: true},
@@ -101,6 +103,17 @@ function Serf (arg1) {
 }
 
 util.inherits(Serf, net.Socket)
+
+Serf.prototype.leave = function () {
+  var Seq = this._seqNoBody += 2
+
+  var header = {
+    Command: 'leave',
+    Seq: Seq
+  }
+
+  this.end(msgpack.encode(header))
+}
 
 Serf.prototype.send = function (Command, hasResponse, body, cb) {
   if (Command === null) Command = ''
@@ -129,8 +142,12 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
 
     stream = new Stream(this, Seq)
 
-    var ondata = function ondata (result) {
-      return stream.emit('data', result)
+    var ondata = function ondata (err, result) {
+      if (err) {
+        stream.emit('error', err)
+      } else {
+        stream.emit('data', result)
+      }
     }
     this.on(Seq, ondata)
 
