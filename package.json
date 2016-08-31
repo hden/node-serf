@@ -27,6 +27,6 @@
   },
   "dependencies": {
     "debug": "^2.2.0",
-    "msgpack-js-v5-ng": "^0.3.0-v5"
+    "msgpack-lite": "github:kawanet/msgpack-lite#c78873c"
   }
 }
