@@ -138,15 +138,17 @@ describe('Serf', function () {
         var ID = data.ID
         clients.two.respond({ID: ID, Payload: 'client two response'})
       })
-      var opts = {Name: "name", Payload: "payload", Timeout: 1000000}
-      clients.one.query(opts, function (err, data) {
-        assert.ifError(err)
-        if (data.Type === 'response') {
-          assert.equal(data.Payload.toString(), 'client two response')
-        } else if (data.Type === 'done') {
-          done()
-        }
-      })
+      var opts = {Name: "name", Payload: "payload"}
+      setTimeout(function () {
+        clients.one.query(opts, function (err, data) {
+          assert.ifError(err)
+          if (data.Type === 'response') {
+            assert.equal(data.Payload.toString(), 'client two response')
+          } else if (data.Type === 'done') {
+            done()
+          }
+        })
+      }, 250)
     })
   })
 
