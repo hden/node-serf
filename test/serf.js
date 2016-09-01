@@ -47,7 +47,7 @@ describe('Serf', function () {
   })
 
   it('stats', function (done) {
-    clients.one.stats({}, function (err, result) {
+    clients.one.stats(function (err, result) {
       assert.ifError(err)
       assert(result.agent.name === 'agent-one')
       done(result.Error === '' ? null : result.Error)
