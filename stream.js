@@ -12,13 +12,12 @@ function Stream (client, seq) {
 util.inherits(Stream, EventEmitter)
 
 Stream.prototype.stop = function (cb) {
-  if (typeof cb !== 'function') cb = function () {}
+  var _this = this
   this._client.stop({
     Stop: this._seq
-  }, cb)
-  var _this = this
-  return process.nextTick(function () {
-    return _this.emit('stop')
+  }, function (err) {
+    if (typeof cb === 'function') cb(err)
+    _this.emit('stop')
   })
 }
 
