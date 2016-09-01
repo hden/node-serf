@@ -132,6 +132,10 @@ three `Type`s of responses: 'ack', 'response' and 'done'. The 'data' event is
 invoked when any type of response is received. When the 'done' response is
 received, the 'stop' event will also be emitted.
 
+Note that there appears to be a bug in Serf wherein responses are sometimes
+sent with the form `{From: '', Payload: null, Type: 'response'}`. You should
+check that `Payload` is not null before attempting to access it.
+
 #### serf.respond(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#respond)
 * `body` \<Object\> Of the form `{ID: number, Payload: string|bytes[, ...]}`
 

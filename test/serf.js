@@ -141,7 +141,7 @@ describe('Serf', function () {
         assert.ifError(err)
       })
       responseStream.on('data', function (data) {
-        if (data.Type === 'response') {
+        if (data.Type === 'response' && data.Payload) {
           assert(data.Payload.toString() === 'client two response')
         }
       })
