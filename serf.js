@@ -122,7 +122,7 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
 
   if (typeof body === 'function') {
     cb = body
-    body = {}
+    body = null
   }
 
   // Setup listeners
