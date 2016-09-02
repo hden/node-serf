@@ -58,19 +58,16 @@ describe('Serf', function () {
     var stream = clients.one.monitor({LogLevel: 'DEBUG'})
     stream.once('data', function (result) {
       assert(typeof result.Log === 'string')
-      stream.stop()
-      done()
+      stream.stop(done)
     })
-    stream.on('error', function (err) {
-      assert.ifError(err)
-    })
+    stream.on('error', done)
   })
 
   it('join', function (done) {
     clients.one.join({Existing: ['127.0.0.1:7947'], Replay: false}, function (err, result) {
       assert.ifError(err)
       assert(result.Num === 1)
-      done(result.Error === '' ? null : result.Error)
+      done()
     })
   })
 
@@ -83,15 +80,37 @@ describe('Serf', function () {
     })
   })
 
-  it('stream', function (done) {
-    clients.two.stream({Type: 'user:foo'}, function (err, data) {
+  it('stream works with a "listen" callback', function (done) {
+    var stream = clients.two.stream({Type: 'user:foo'}, function (err) {
       assert.ifError(err)
+      clients.one.event({Name: 'foo', Payload: 'test payload', Coalesce: true}, function (err) {
+        assert.ifError(err)
+      })
+    })
+    stream.on('error', done)
+    stream.on('data', function (data) {
       assert(data.Event === 'user')
       assert(data.Name === 'foo')
       assert(data.Payload.toString() === 'test payload')
-      done()
+      stream.stop(done)
     })
-    clients.one.event({Name: 'foo', Payload: 'test payload', Coalesce: true})
+  })
+
+  it('stream works with a "listen" listener', function (done) {
+    var stream = clients.two.stream({Type: 'user:foo'})
+    stream.on('listen', function (err) {
+      assert.ifError(err)
+      clients.one.event({Name: 'foo', Payload: 'test payload', Coalesce: true}, function (err) {
+        assert.ifError(err)
+      })
+    })
+    stream.on('error', done)
+    stream.on('data', function (data) {
+      assert(data.Event === 'user')
+      assert(data.Name === 'foo')
+      assert(data.Payload.toString() === 'test payload')
+      stream.stop(done)
+    })
   })
 
   it('force-leave')
@@ -115,26 +134,32 @@ describe('Serf', function () {
   })
 
   it('query+stream+respond', function (done) {
-    clients.two.stream({Type: 'query'}, function (err, data) {
+    var queryStream = clients.two.stream({Type: 'query'}, function (err) {
       assert.ifError(err)
+      var opts = {Name: 'name', Payload: 'payload'}
+      var responseStream = clients.one.query(opts, function (err) {
+        assert.ifError(err)
+      })
+      responseStream.on('data', function (data) {
+        if (data.Type === 'response' && data.Payload) {
+          assert(data.Payload.toString() === 'client two response')
+        }
+      })
+      responseStream.on('stop', function () {
+        queryStream.stop(done)
+      })
+    })
+
+    queryStream.on('data', function (data) {
       assert(data.Event === 'query')
       assert(data.Name === 'name')
       assert(data.Payload.toString() === 'payload')
       assert(typeof data.ID === 'number')
       var ID = data.ID
-      clients.two.respond({ID: ID, Payload: 'client two response'})
-    })
-    var opts = {Name: 'name', Payload: 'payload'}
-    setTimeout(function () {
-      clients.one.query(opts, function (err, data) {
+      clients.two.respond({ID: ID, Payload: 'client two response'}, function (err) {
         assert.ifError(err)
-        if (data.Type === 'response') {
-          assert(data.Payload.toString() === 'client two response')
-        } else if (data.Type === 'done') {
-          done()
-        }
       })
-    }, 250)
+    })
   })
 
   it('install-key')
@@ -155,15 +180,15 @@ describe('Serf', function () {
   })
 
   it('leave', function (done) {
-    clients.two.stream({Type: 'member-leave'}, function (err, data) {
+    var stream = clients.two.stream({Type: 'member-leave'}, function (err) {
       assert.ifError(err)
-      assert(data.Members[0].Name === 'agent-one')
-      done()
-    })
-    setTimeout(function () {
       clients.one.leave(function (err) {
         assert.ifError(err)
       })
-    }, 250)
+    })
+    stream.on('data', function (data) {
+      assert(data.Members[0].Name === 'agent-one')
+      done()
+    })
   })
 })

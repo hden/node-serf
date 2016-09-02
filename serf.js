@@ -14,7 +14,11 @@ function camelize (str) {
 }
 
 function expectBody (seq) {
-  return seq % 2 === 0
+  return seq % 3 === 0
+}
+
+function isStream (seq) {
+  return (seq - 2) % 3 === 0
 }
 
 var ids = 0
@@ -28,9 +32,15 @@ function Serf (arg1) {
 
   var _this = this
   this._id = ids++
-  // Even-numbered sequences have no response body; odds do.
-  this._seqBody = 0
-  this._seqNoBody = 1
+  // Sequence controls the type of respond handling
+  this._seqBody = 0 // 3, 6, 9...
+  this._seqNoBody = 1 // 4, 7, 10...
+  this._seqStream = 2 // 5, 8, 11...
+  // Map of sequences that are in body phase
+  _this._bodyPhaseStreamSeqs = {}
+  function isStreamInBodyPhase (seq) {
+    return isStream(seq) && _this._bodyPhaseStreamSeqs[seq]
+  }
   this._next = null
   var decoder = msgpack.createDecodeStream()
   this.pipe(decoder)
@@ -46,9 +56,10 @@ function Serf (arg1) {
         return _this.emit(Seq, err)
       }
 
-      if (expectBody(Seq)) {
-        _this._next = obj.Seq
+      if (expectBody(Seq) || isStreamInBodyPhase(Seq)) {
+        _this._next = Seq
       } else {
+        if (isStream(Seq)) _this._bodyPhaseStreamSeqs[Seq] = true
         _this.emit(Seq, null)
       }
     } else {
@@ -70,10 +81,7 @@ function Serf (arg1) {
     {name: 'members', hasResponse: true},
     {name: 'members-filtered', hasResponse: true},
     {name: 'tags', hasResponse: false},
-    {name: 'stream', hasResponse: true},
-    {name: 'monitor', hasResponse: true},
     {name: 'stop', hasResponse: false},
-    {name: 'query', hasResponse: true},
     {name: 'respond', hasResponse: false},
     {name: 'install-key', hasResponse: true},
     {name: 'use-key', hasResponse: true},
@@ -88,6 +96,19 @@ function Serf (arg1) {
     var hasResponse = command.hasResponse
     _this[commandName] = _this[camelize(commandName)] = function (body, cb) {
       return _this.send(commandName, hasResponse, body, cb)
+    }
+  })
+
+  var streamingCommands = [
+    {name: 'stream'},
+    {name: 'monitor'},
+    {name: 'query'}
+  ]
+
+  streamingCommands.forEach(function (command) {
+    var commandName = command.name
+    _this[commandName] = _this[camelize(commandName)] = function (body, cb) {
+      return _this.sendStream(commandName, body, cb)
     }
   })
 }
@@ -105,62 +126,77 @@ Serf.prototype.leave = function () {
   this.end(msgpack.encode(header))
 }
 
-Serf.prototype.send = function (Command, hasResponse, body, cb) {
-  if (Command === null) Command = ''
-
-  var Seq
-  if (hasResponse) {
-    Seq = this._seqBody += 2
-  } else {
-    Seq = this._seqNoBody += 2
-  }
+Serf.prototype.sendStream = function (Command, body, cb) {
+  var Seq = this._seqStream += 3
 
   var header = {
     Command: Command,
     Seq: Seq
   }
 
+  var stream = new Stream(this, Seq)
+
+  var ondata = function ondata (err, result) {
+    if (err) {
+      stream.emit('error', err)
+    } else {
+      stream.emit('data', result)
+      if (Command === 'query' && result.Type === 'done') {
+        stream.emit('stop')
+      }
+    }
+  }
+
+  // Call the listen callback/emit 'listen' first, then bind 'ondata' instead.
+  this.once(Seq, function (err) {
+    stream.emit('listen', err)
+    this.on(Seq, ondata)
+    if (typeof cb === 'function') cb(err)
+  })
+
+  var _this = this
+  stream.once('stop', function () {
+    if (typeof cb === 'function') {
+      _this.removeListener(Seq, cb)
+    }
+    stream.removeListener('data', ondata)
+    delete _this._bodyPhaseStreamSeqs[Seq]
+  })
+
+  dowrite(this, header, body)
+
+  return stream
+}
+
+Serf.prototype.send = function (Command, hasResponse, body, cb) {
+  if (Command === null) Command = ''
+
   if (typeof body === 'function') {
     cb = body
     body = null
   }
 
-  // Setup listeners
-  var stream
-  if (Command === 'stream' || Command === 'monitor' || Command === 'query') {
-    if (typeof cb === 'function') this.on(Seq, cb)
+  var Seq = hasResponse ? (this._seqBody += 3) : (this._seqNoBody += 3)
 
-    stream = new Stream(this, Seq)
+  var header = {
+    Command: Command,
+    Seq: Seq
+  }
 
-    var ondata = function ondata (err, result) {
-      if (err) {
-        stream.emit('error', err)
-      } else {
-        stream.emit('data', result)
-      }
-    }
-    this.on(Seq, ondata)
-
-    var _this = this
-    stream.once('stop', function () {
-      if (typeof cb === 'function') {
-        _this.removeListener(Seq, cb)
-      }
-      return stream.removeListener('data', ondata)
-    })
-  } else if (typeof cb === 'function') {
+  if (typeof cb === 'function') {
     this.once(Seq, cb)
   }
 
-  // Send message
-  debug('[%j] sending header: %j', this._id, header)
-  this.write(msgpack.encode(header))
-  if (body !== null) {
-    debug('[%j] sending body: %j', this._id, body)
-    this.write(msgpack.encode(body))
-  }
+  dowrite(this, header, body)
+}
 
-  if (stream) return stream
+function dowrite (client, header, body) {
+  debug('[%j] sending header: %j', client._id, header)
+  client.write(msgpack.encode(header))
+  if (body !== null) {
+    debug('[%j] sending body: %j', client._id, body)
+    client.write(msgpack.encode(body))
+  }
 }
 
 exports.connect = function connect () {

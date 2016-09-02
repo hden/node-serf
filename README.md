@@ -85,27 +85,40 @@ rejoin, however.
 
 #### serf.stream(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#stream)
 
-Listen via `on('data')` and `on('error')` listeners:
+Returns an event emitter than can be handled with `'listen'`, `'data'`,
+`'error'`  and `'stop'` listeners. This is *not* a node.js Stream, so it cannot
+be piped, paused, etc. Messages are not buffered, so messages will be dropped
+if listeners are not attached.
+
+If a callback is provided, it will be added to the `'listen'` listeners.
+
+The returned emitter has a `stop` method that ends the stream. If a callback is
+provided, it will be added to the `'stop'` listeners.
 
 ```js
-var handler = client.stream({Type: '*'}); // returns instance of stream handler
-
-handler.on('data', function (result) {
-  // handle streaming message
-  console.log(result);
-  handler.stop(); // stop streaming
+var stream = client.stream({Type: '*'}, function (err) {
+  // Called after the stream is connected
+  assert.ifError(err);
 });
 
-handler.on('error', console.error.bind(console)); // log errors
-```
+stream.on('listen', function (err) {
+  // Also called after the stream is connected
+});
 
-or, via a callback that will be invoked on every event instance:
+stream.on('error', console.error.bind(console)); // log errors
 
-```js
-var handler = client.stream({Type: '*'}, function (err, result) {
-  assert.ifError(err);
+stream.on('data', function (result) {
+  // Handle streaming message
   console.log(result);
-  handler.stop();
+
+  // Stop streaming
+  stream.stop(function (err) {
+    // Called when the stream is stopped
+  });
+});
+
+stream.on('stop', function () {
+  // Also emitted when the stream is stopped
 });
 ```
 
@@ -114,8 +127,14 @@ var handler = client.stream({Type: '*'}, function (err, result) {
 Listen using the same syntax as `serf.stream`.
 
 #### serf.query(body, callback) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#query)
-Issues a new query. The callback is invoked for every response. Check the
-`Type` of the response, which may be 'ack', 'response' or 'done'.
+Issues a new query. Listen using the same syntax as `serf.stream`. There are
+three `Type`s of responses: 'ack', 'response' and 'done'. The 'data' event is
+invoked when any type of response is received. When the 'done' response is
+received, the 'stop' event will also be emitted.
+
+Note that there appears to be a bug in Serf wherein responses are sometimes
+sent with the form `{From: '', Payload: null, Type: 'response'}`. You should
+check that `Payload` is not null before attempting to access it.
 
 #### serf.respond(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#respond)
 * `body` \<Object\> Of the form `{ID: number, Payload: string|bytes[, ...]}`
