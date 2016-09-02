@@ -1,6 +1,6 @@
 {
   "name": "node-serf",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "Serf management and orchestration",
   "main": "serf.js",
   "directories": {
