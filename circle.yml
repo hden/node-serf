@@ -1,0 +1,12 @@
+machine:
+  node:
+    version: 6
+  environment:
+    PATH: $PATH:/tmp/serf/
+dependencies:
+  pre:
+    - "wget -qO- -O serf.zip https://releases.hashicorp.com/serf/0.8.0/serf_0.8.0_linux_amd64.zip && unzip serf.zip && rm serf.zip"
+    - "mkdir -p /tmp/serf && mv serf /tmp/serf/serf"
+test:
+  pre:
+    - "npm run lint"
