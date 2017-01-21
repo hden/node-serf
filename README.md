@@ -17,7 +17,7 @@ npm install --save node-serf
 
 ## Quick Start
 
-Just send the body. The header and `Seq` values have been taken care for you.
+Just send the body. The header and `Seq` values have been taken care of for you.
 Commands without response bodies will invoke the callback upon acknowledgement
 by the Serf agent. Commands with response bodies will invoke the callback with
 the response.
@@ -85,7 +85,7 @@ rejoin, however.
 
 #### serf.stream(body[, callback]) [(ref)](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown#stream)
 
-Returns an event emitter than can be handled with `'listen'`, `'data'`,
+Returns an event emitter that can be handled with `'listen'`, `'data'`,
 `'error'`  and `'stop'` listeners. This is *not* a node.js Stream, so it cannot
 be piped, paused, etc. Messages are not buffered, so messages will be dropped
 if listeners are not attached.
