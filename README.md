@@ -1,7 +1,8 @@
 node-serf
 =========
 
-[![Build Status](https://travis-ci.org/hden/node-serf.svg?branch=master)](https://travis-ci.org/hden/node-serf)[![dependencies Status](https://david-dm.org/hden/node-serf/status.svg)](https://david-dm.org/hden/node-serf)
+[![CircleCI](https://circleci.com/gh/hden/node-serf.svg?style=svg)](https://circleci.com/gh/hden/node-serf)
+[![dependencies Status](https://david-dm.org/hden/node-serf/status.svg)](https://david-dm.org/hden/node-serf)
 
 [Serf](http://www.serfdom.io) management and orchestration client.
 
