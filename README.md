@@ -42,6 +42,33 @@ var client = Serf.connect(function (err) {
 });
 ```
 
+All of the non-stream-based commands also have a promise interface if you'd
+rather use that instead of callbacks:
+
+```js
+var Serf = require('node-serf');
+
+// Connection to Serf agent at the default, "127.0.0.1:7373"
+var client = Serf.connect(function (err) {
+  assert.ifError(err);
+  console.log('connected');
+
+  // With callbacks
+  client.members(function (err, members) {
+    console.log(members);
+  });
+
+  // With promise "then" method
+  client.members().then(function (err, members) {
+    console.log(members);
+  });
+
+  // With async/await
+  var members = await client.members();
+  console.log(members);
+});
+```
+
 ## API Documentation
 
 Please refer to the [Serf RPC documentation](https://github.com/hashicorp/serf/blob/master/website/source/docs/agent/rpc.html.markdown)
