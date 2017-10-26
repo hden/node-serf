@@ -42,7 +42,7 @@ var client = Serf.connect(function (err) {
 });
 ```
 
-All of them non-stream-based commands also have a promise interface if you'd
+All of the non-stream-based commands also have a promise interface if you'd
 rather use that instead of callbacks:
 
 ```js
