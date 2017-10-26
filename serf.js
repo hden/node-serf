@@ -185,16 +185,16 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
 
   var _this = this
   return new Promise(function (resolve, reject) {
-      if (typeof cb === 'function') {
-        _this.once(Seq, cb)
-      } else {
-        _this.once(Seq, function (err, response) {
-          if (err) reject(err)
-          else resolve(response)
-        })
-      }
+    if (typeof cb === 'function') {
+      _this.once(Seq, cb)
+    } else {
+      _this.once(Seq, function (err, response) {
+        if (err) reject(err)
+        else resolve(response)
+      })
+    }
 
-      dowrite(_this, header, body)
+    dowrite(_this, header, body)
   })
 }
 
