@@ -80,6 +80,17 @@ describe('Serf', function () {
     })
   })
 
+  it('members promise interface', function (done) {
+    clients.one.members().then(function (result) {
+      assert(Array.isArray(result.Members))
+      assert(result.Members.length === 2)
+      done()
+    }).catch(function (err) {
+      assert.ifError(err)
+      done()
+    })
+  })
+
   it('stream works with a "listen" callback', function (done) {
     var stream = clients.two.stream({Type: 'user:foo'}, function (err) {
       assert.ifError(err)
