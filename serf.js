@@ -199,6 +199,41 @@ function dowrite (client, header, body) {
   }
 }
 
+/*
+ * normalizeConnectArgs, isPipeName & toNumber have been extracted from the
+ * Node.js source, as it's an undocumented API and this ensures future
+ * compatability. All credit goes to the Node.js team.
+ */
+
+function toNumber (x) { return (x = Number(x)) >= 0 ? x : false }
+
+function isPipeName (s) {
+  return typeof s === 'string' && toNumber(s) === false
+}
+
+function normalizeConnectArgs (args) {
+  var options = {}
+
+  if (args.length === 0) {
+    return [options]
+  } else if (args[0] !== null && typeof args[0] === 'object') {
+    // connect(options, [cb])
+    options = args[0]
+  } else if (isPipeName(args[0])) {
+    // connect(path, [cb]);
+    options.path = args[0]
+  } else {
+    // connect(port, [host], [cb])
+    options.port = args[0]
+    if (args.length > 1 && typeof args[1] === 'string') {
+      options.host = args[1]
+    }
+  }
+
+  var cb = args[args.length - 1]
+  return typeof cb === 'function' ? [options, cb] : [options]
+}
+
 exports.connect = function connect () {
   var argsLen = arguments.length
   var args = new Array(argsLen)
@@ -213,7 +248,7 @@ exports.connect = function connect () {
     })
   }
 
-  args = net._normalizeConnectArgs(args)
+  args = normalizeConnectArgs(args)
   debug('create connection with args: %j', args)
 
   var s = new Serf(args[0])
