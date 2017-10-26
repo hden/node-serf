@@ -14,6 +14,12 @@ describe('Serf', function () {
     procs.push(spawn('serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946', '-rpc-addr=127.0.0.1:7374']))
     procs.push(spawn('serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7375']))
 
+    // NOTE: Temporary monitoring methods
+    procs[0].stdout.on('data', d => console.log(d.toString()))
+    procs[0].stderr.on('data', d => console.log(d.toString()))
+    procs[1].stdout.on('data', d => console.log(d.toString()))
+    procs[1].stderr.on('data', d => console.log(d.toString()))
+
     setTimeout(function () {
       clients.one = Serf.connect({port: 7374}, function (err) {
         assert.ifError(err)
