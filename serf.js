@@ -1,10 +1,10 @@
 'use strict'
 
-var net = require('net')
-var debug = require('debug')('serf')
-var msgpack = require('msgpack-lite')
-var Stream = require('./stream').Stream
-var util = require('util')
+const net = require('net')
+const debug = require('debug')('serf')
+const msgpack = require('msgpack-lite')
+const Stream = require('./stream').Stream
+const util = require('util')
 
 function camelize (str) {
   if (str === null) str = ''
@@ -21,7 +21,7 @@ function isStream (seq) {
   return (seq - 2) % 3 === 0
 }
 
-var ids = 0
+let ids = 0
 
 function Serf (arg1) {
   if (!(this instanceof Serf)) {
@@ -30,7 +30,7 @@ function Serf (arg1) {
 
   net.Socket.call(this, arg1)
 
-  var _this = this
+  const _this = this
   this._id = ids++
   // Sequence controls the type of respond handling
   this._seqBody = 0 // 3, 6, 9...
@@ -42,17 +42,17 @@ function Serf (arg1) {
     return isStream(seq) && _this._bodyPhaseStreamSeqs[seq]
   }
   this._next = null
-  var decoder = msgpack.createDecodeStream()
+  const decoder = msgpack.createDecodeStream()
   this.pipe(decoder)
 
   decoder.on('data', function (obj) {
     debug('[%j] received %j', _this._id, obj)
 
-    var Seq = obj.Seq
+    const Seq = obj.Seq
     if (Seq !== undefined) {
       // Header
       if ((obj.Error !== null && obj.Error !== undefined) && obj.Error !== '') {
-        var err = new Error(obj.Error)
+        const err = new Error(obj.Error)
         return _this.emit(Seq, err)
       }
 
@@ -72,41 +72,41 @@ function Serf (arg1) {
     return debug('[%j] disconnected', _this._id)
   })
 
-  var commands = [
-    {name: 'handshake', hasResponse: false},
-    {name: 'auth', hasResponse: false},
-    {name: 'event', hasResponse: false},
-    {name: 'force-leave', hasResponse: false},
-    {name: 'join', hasResponse: true},
-    {name: 'members', hasResponse: true},
-    {name: 'members-filtered', hasResponse: true},
-    {name: 'tags', hasResponse: false},
-    {name: 'stop', hasResponse: false},
-    {name: 'respond', hasResponse: false},
-    {name: 'install-key', hasResponse: true},
-    {name: 'use-key', hasResponse: true},
-    {name: 'remove-key', hasResponse: true},
-    {name: 'list-keys', hasResponse: true},
-    {name: 'stats', hasResponse: true},
-    {name: 'get-coordinate', hasResponse: true}
+  const commands = [
+    { name: 'handshake', hasResponse: false },
+    { name: 'auth', hasResponse: false },
+    { name: 'event', hasResponse: false },
+    { name: 'force-leave', hasResponse: false },
+    { name: 'join', hasResponse: true },
+    { name: 'members', hasResponse: true },
+    { name: 'members-filtered', hasResponse: true },
+    { name: 'tags', hasResponse: false },
+    { name: 'stop', hasResponse: false },
+    { name: 'respond', hasResponse: false },
+    { name: 'install-key', hasResponse: true },
+    { name: 'use-key', hasResponse: true },
+    { name: 'remove-key', hasResponse: true },
+    { name: 'list-keys', hasResponse: true },
+    { name: 'stats', hasResponse: true },
+    { name: 'get-coordinate', hasResponse: true }
   ]
 
   commands.forEach(function (command) {
-    var commandName = command.name
-    var hasResponse = command.hasResponse
+    const commandName = command.name
+    const hasResponse = command.hasResponse
     _this[commandName] = _this[camelize(commandName)] = function (body, cb) {
       return _this.send(commandName, hasResponse, body, cb)
     }
   })
 
-  var streamingCommands = [
-    {name: 'stream'},
-    {name: 'monitor'},
-    {name: 'query'}
+  const streamingCommands = [
+    { name: 'stream' },
+    { name: 'monitor' },
+    { name: 'query' }
   ]
 
   streamingCommands.forEach(function (command) {
-    var commandName = command.name
+    const commandName = command.name
     _this[commandName] = _this[camelize(commandName)] = function (body, cb) {
       return _this.sendStream(commandName, body, cb)
     }
@@ -116,9 +116,9 @@ function Serf (arg1) {
 util.inherits(Serf, net.Socket)
 
 Serf.prototype.leave = function () {
-  var Seq = this._seqNoBody += 2
+  const Seq = this._seqNoBody += 2
 
-  var header = {
+  const header = {
     Command: 'leave',
     Seq: Seq
   }
@@ -127,16 +127,16 @@ Serf.prototype.leave = function () {
 }
 
 Serf.prototype.sendStream = function (Command, body, cb) {
-  var Seq = this._seqStream += 3
+  const Seq = this._seqStream += 3
 
-  var header = {
+  const header = {
     Command: Command,
     Seq: Seq
   }
 
-  var stream = new Stream(this, Seq)
+  const stream = new Stream(this, Seq)
 
-  var ondata = function ondata (err, result) {
+  const ondata = function ondata (err, result) {
     if (err) {
       stream.emit('error', err)
     } else {
@@ -154,7 +154,7 @@ Serf.prototype.sendStream = function (Command, body, cb) {
     if (typeof cb === 'function') cb(err)
   })
 
-  var _this = this
+  const _this = this
   stream.once('stop', function () {
     if (typeof cb === 'function') {
       _this.removeListener(Seq, cb)
@@ -176,9 +176,9 @@ Serf.prototype.send = function (Command, hasResponse, body, cb) {
     body = null
   }
 
-  var Seq = hasResponse ? (this._seqBody += 3) : (this._seqNoBody += 3)
+  const Seq = hasResponse ? (this._seqBody += 3) : (this._seqNoBody += 3)
 
-  var header = {
+  const header = {
     Command: Command,
     Seq: Seq
   }
@@ -212,7 +212,7 @@ function isPipeName (s) {
 }
 
 function normalizeConnectArgs (args) {
-  var options = {}
+  let options = {}
 
   if (args.length === 0) {
     return [options]
@@ -230,14 +230,14 @@ function normalizeConnectArgs (args) {
     }
   }
 
-  var cb = args[args.length - 1]
+  const cb = args[args.length - 1]
   return typeof cb === 'function' ? [options, cb] : [options]
 }
 
 exports.connect = function connect () {
-  var argsLen = arguments.length
-  var args = new Array(argsLen)
-  for (var i = 0; i < argsLen; i++) {
+  const argsLen = arguments.length
+  let args = new Array(argsLen)
+  for (let i = 0; i < argsLen; i++) {
     args[i] = arguments[i]
   }
 
@@ -251,16 +251,16 @@ exports.connect = function connect () {
   args = normalizeConnectArgs(args)
   debug('create connection with args: %j', args)
 
-  var s = new Serf(args[0])
+  const s = new Serf(args[0])
 
-  var onHandshake = typeof args[args.length - 1] === 'function'
+  const onHandshake = typeof args[args.length - 1] === 'function'
     ? args.pop()
     : function () {}
 
   // Pass errors from the connection phase to the callback.
   s.on('error', onHandshake)
 
-  var doHandshake = function () {
+  const doHandshake = function () {
     debug('[%j] connected', s._id)
     s.removeListener('error', onHandshake)
     s.handshake({

@@ -6,17 +6,17 @@ const spawn = require('child_process').spawn
 const Serf = require('../serf')
 
 describe('Serf', function () {
-  var procs = []
-  var clients = {}
+  const procs = []
+  const clients = {}
 
   before(function (done) {
     procs.push(spawn('serf', ['agent', '-node=agent-one', '-bind=127.0.0.1:7946', '-rpc-addr=127.0.0.1:7374']))
     procs.push(spawn('serf', ['agent', '-node=agent-two', '-bind=127.0.0.1:7947', '-rpc-addr=127.0.0.1:7375']))
 
     setTimeout(function () {
-      clients.one = Serf.connect({port: 7374}, function (err) {
+      clients.one = Serf.connect({ port: 7374 }, function (err) {
         assert.ifError(err)
-        clients.two = Serf.connect({port: 7375}, done)
+        clients.two = Serf.connect({ port: 7375 }, done)
       })
     }, 500)
   })
@@ -40,7 +40,7 @@ describe('Serf', function () {
   })
 
   it('monitor', function (done) {
-    var stream = clients.one.monitor({LogLevel: 'DEBUG'})
+    const stream = clients.one.monitor({ LogLevel: 'DEBUG' })
     stream.once('data', function (result) {
       assert(typeof result.Log === 'string')
       stream.stop(done)
@@ -49,7 +49,7 @@ describe('Serf', function () {
   })
 
   it('join', function (done) {
-    clients.one.join({Existing: ['127.0.0.1:7947'], Replay: false}, function (err, result) {
+    clients.one.join({ Existing: ['127.0.0.1:7947'], Replay: false }, function (err, result) {
       assert.ifError(err)
       assert(result.Num === 1)
       done()
@@ -66,9 +66,9 @@ describe('Serf', function () {
   })
 
   it('stream works with a "listen" callback', function (done) {
-    var stream = clients.two.stream({Type: 'user:foo'}, function (err) {
+    const stream = clients.two.stream({ Type: 'user:foo' }, function (err) {
       assert.ifError(err)
-      clients.one.event({Name: 'foo', Payload: 'test payload', Coalesce: true}, function (err) {
+      clients.one.event({ Name: 'foo', Payload: 'test payload', Coalesce: true }, function (err) {
         assert.ifError(err)
       })
     })
@@ -82,10 +82,10 @@ describe('Serf', function () {
   })
 
   it('stream works with a "listen" listener', function (done) {
-    var stream = clients.two.stream({Type: 'user:foo'})
+    const stream = clients.two.stream({ Type: 'user:foo' })
     stream.on('listen', function (err) {
       assert.ifError(err)
-      clients.one.event({Name: 'foo', Payload: 'test payload', Coalesce: true}, function (err) {
+      clients.one.event({ Name: 'foo', Payload: 'test payload', Coalesce: true }, function (err) {
         assert.ifError(err)
       })
     })
@@ -103,14 +103,14 @@ describe('Serf', function () {
   it('auth')
 
   it('tags', function (done) {
-    clients.one.tags({Tags: {key1: 'val1'}}, function (err) {
+    clients.one.tags({ Tags: { key1: 'val1' } }, function (err) {
       assert.ifError(err)
       done()
     })
   })
 
   it('membersFiltered', function (done) {
-    clients.one.membersFiltered({Tags: {key1: 'val1'}}, function (err, res) {
+    clients.one.membersFiltered({ Tags: { key1: 'val1' } }, function (err, res) {
       assert.ifError(err)
       assert(res.Members.length === 1)
       assert(res.Members[0].Name === 'agent-one')
@@ -119,10 +119,10 @@ describe('Serf', function () {
   })
 
   it('query+stream+respond', function (done) {
-    var queryStream = clients.two.stream({Type: 'query'}, function (err) {
+    const queryStream = clients.two.stream({ Type: 'query' }, function (err) {
       assert.ifError(err)
-      var opts = {Name: 'name', Payload: 'payload'}
-      var responseStream = clients.one.query(opts, function (err) {
+      const opts = { Name: 'name', Payload: 'payload' }
+      const responseStream = clients.one.query(opts, function (err) {
         assert.ifError(err)
       })
       responseStream.on('data', function (data) {
@@ -140,8 +140,8 @@ describe('Serf', function () {
       assert(data.Name === 'name')
       assert(data.Payload.toString() === 'payload')
       assert(typeof data.ID === 'number')
-      var ID = data.ID
-      clients.two.respond({ID: ID, Payload: 'client two response'}, function (err) {
+      const ID = data.ID
+      clients.two.respond({ ID: ID, Payload: 'client two response' }, function (err) {
         assert.ifError(err)
       })
     })
@@ -156,7 +156,7 @@ describe('Serf', function () {
   it('list-keys')
 
   it('get-coordinate', function (done) {
-    clients.one.getCoordinate({Node: 'agent-one'}, function (err, res) {
+    clients.one.getCoordinate({ Node: 'agent-one' }, function (err, res) {
       assert.ifError(err)
       assert(res.Ok)
       assert(res.Coord)
@@ -165,7 +165,7 @@ describe('Serf', function () {
   })
 
   it('leave', function (done) {
-    var stream = clients.two.stream({Type: 'member-leave'}, function (err) {
+    const stream = clients.two.stream({ Type: 'member-leave' }, function (err) {
       assert.ifError(err)
       clients.one.leave(function (err) {
         assert.ifError(err)
