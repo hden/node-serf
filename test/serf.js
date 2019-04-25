@@ -1,10 +1,9 @@
 /* global describe before after it */
 'use strict'
 
-var assert = require('power-assert')
-var spawn = require('child_process').spawn
-var net = require('net')
-var Serf = require('../serf')
+const assert = require('power-assert')
+const spawn = require('child_process').spawn
+const Serf = require('../serf')
 
 describe('Serf', function () {
   var procs = []
