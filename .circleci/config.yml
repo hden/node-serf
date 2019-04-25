@@ -15,5 +15,6 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
+      - run: wget -qO- -O serf.zip https://releases.hashicorp.com/serf/0.8.1/serf_0.8.1_linux_amd64.zip && unzip serf.zip && rm serf.zip && mv serf /usr/local/bin/
       - run: npm run lint
       - run: npm test
