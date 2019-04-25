@@ -32,20 +32,6 @@ describe('Serf', function () {
     assert(clients.one['force-leave'] === clients.one.forceLeave)
   })
 
-  describe('connect', function () {
-    it('defaults to localhost:7373', function (done) {
-      var mockServer = net.createServer(function (c) {
-        c.end()
-        mockServer.close(done)
-      })
-      mockServer.listen(7373, function () { })
-
-      var agent = Serf.connect(function () {
-        agent.end()
-      })
-    })
-  })
-
   it('stats', function (done) {
     clients.one.stats(function (err, result) {
       assert.ifError(err)
