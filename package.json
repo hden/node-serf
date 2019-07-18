@@ -24,7 +24,7 @@
   "gitHead": "8299820b8f0d7301495e2b61f657ce7d7d03a241",
   "devDependencies": {
     "intelli-espower-loader": "1.0.1",
-    "mocha": "6.1.4",
+    "mocha": "6.2.0",
     "power-assert": "1.6.1",
     "standard": "13.0.2"
   },
